@@ -1,0 +1,83 @@
+#Remove Logs
+Function Remove-Logs {
+<#
+.SYNOPSIS
+Remove-Logs will delete everything in a specified folder older than a specified date. 
+
+.DESCRIPTION
+Remove-Logs will delete all files older than the UpperLimit parameter. It will also remove any empty directories left behind after deleting the files. Archive (*.zip) files older than the LowerLimit parameter will be deleted. *.zip files are kept for a shorter time period because files are generally already 30 days old by the time they are archived into a *.zip file (use Compress-Files function for to automatically zip files). 
+
+.PARAMETER Path
+The path to the parent folder. Default is D:\Logs 
+
+.PARAMETER UpperLimit
+Number of days. Files older than this date will be removed 
+
+.PARAMETER LowerLimit
+Number of days. *.zip files older than this date will be removed 
+
+.EXAMPLE
+Remove-Logs -Path D:\Logs
+
+.EXAMPLE
+Remove-Logs -Path D:\IIS_LogFiles -UpperLimit 30
+
+.Notes
+Alias Delete-Logs
+
+Written by Nick Chard. For more information contact nick.chard@talktalkplc.com
+
+#>
+[cmdletbinding(SupportsShouldProcess=$True,
+                ConfirmImpact='High')]
+param (
+[string]$path = 'D:\Logs',
+[int]$UpperLimit=90,
+[int]$LowerLimit=60
+)
+
+$limit = (Get-Date).AddDays(-$UpperLimit)
+$limit60 = (Get-Date).AddDays(-$LowerLimit)
+
+
+If ( $PSVersionTable.psversion.major -eq 2 ) {
+
+    #Delete files older than the $limit (default 90 days)
+    Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit } | Remove-Item -Force
+
+    #Delete zip files older than the $limit60 (default 60 days)
+    Get-ChildItem -Path $path -Recurse -Force -include *.zip | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit60 } | Remove-Item -Force
+
+    #Delete any empty directories left behind after deleting the files.
+    $Dir = Get-ChildItem -Path $path -Recurse -Force | where { $_.PSIsContainer }
+    foreach ( $folder in $dir ) {
+        if ( (gci $folder.FullName) -eq $null ) {
+        Remove-item $folder.FullName
+        }
+    }
+}
+
+Else {
+
+        If ($pscmdlet.ShouldProcess("All items older than $limit in the following location will be removed: $Path")) {
+            Get-ChildItem -Path $path -Recurse -Force | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit } | Remove-Item -Force
+            }
+
+        If ($pscmdlet.ShouldProcess("*.zip files older than $limit60 in the following location will be removed: $Path")) {
+            # Delete zip files older than the $limit60 (default 60 days)
+            Get-ChildItem -Path $path -Recurse -Force -include *.zip | Where-Object { !$_.PSIsContainer -and $_.LastWriteTime -lt $limit60 } | Remove-Item -Force
+            }
+
+        If ($pscmdlet.ShouldProcess("Empty folders in the following location will be removed: $Path")) {
+            # Delete any empty directories left behind after deleting the files.
+            #Get-ChildItem -Path $path -Recurse -Force | Where-Object { $_.PSIsContainer -and (Get-ChildItem -Path $_.FullName -Recurse -Force | Where-Object { !$_.PSIsContainer }) -eq $null } | Remove-Item -Force -Recurse
+                $Dir = Get-ChildItem -Path $path -Recurse -Force | where { $_.PSIsContainer }
+                foreach ( $folder in $dir ) {
+                    if ( (gci $folder.FullName) -eq $null ) {
+                    Remove-item $folder.FullName
+                    }
+                }
+            }
+
+      }
+}
