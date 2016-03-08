@@ -23,9 +23,6 @@ Remove-Logs -Path D:\Logs
 Remove-Logs -Path D:\IIS_LogFiles -UpperLimit 30
 
 .Notes
-Alias Delete-Logs
-
-Written by Nick Chard. For more information contact nick.chard@talktalkplc.com
 
 #>
 [cmdletbinding(SupportsShouldProcess=$True,
