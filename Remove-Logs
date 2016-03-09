@@ -1,3 +1,4 @@
+```PowerShell
 #Remove Logs
 Function Remove-Logs {
 <#
@@ -78,3 +79,4 @@ Else {
 
       }
 }
+```
