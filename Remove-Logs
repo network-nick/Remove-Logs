@@ -1,4 +1,4 @@
-```PowerShell
+```Ruby
 #Remove Logs
 Function Remove-Logs {
 <#
@@ -79,4 +79,4 @@ Else {
 
       }
 }
-```
+
